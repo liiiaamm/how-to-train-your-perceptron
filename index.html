@@ -1,164 +1,177 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Cómo entrenar a tu perceptrón</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #050816;
-      --bg-alt: #0b1020;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56,189,248,0.2);
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --radius: 18px;
-      --shadow-soft: 0 18px 40px rgba(0,0,0,0.55);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #1d283a 0, #050816 55%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-    .shell {
-      max-width: 900px;
-      width: 100%;
-      background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
-      border-radius: 26px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(148,163,184,0.25);
-      padding: 2.5rem 2.2rem;
-    }
-    h1 {
-      margin: 0 0 0.5rem;
-      font-size: clamp(1.9rem, 3vw, 2.3rem);
-      letter-spacing: 0.02em;
-    }
-    .subtitle {
-      margin: 0 0 1.7rem;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.2rem 0.7rem;
-      border-radius: 999px;
-      background: rgba(15,118,110,0.18);
-      color: #a5f3fc;
-      font-size: 0.78rem;
-      margin-bottom: 0.8rem;
-    }
-    .badge-dot {
-      width: 6px; height: 6px; border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 12px #22c55e;
-    }
-    .links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-    a.btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.75rem 1.4rem;
-      border-radius: 999px;
-      text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 500;
-      border: 1px solid rgba(148,163,184,0.4);
-      color: var(--text);
-      background: rgba(15,23,42,0.9);
-      transition: 0.2s ease;
-      gap: 0.5rem;
-    }
-    a.btn.primary {
-      background: linear-gradient(135deg,#38bdf8,#4ade80);
-      border-color: transparent;
-      color: #0b1120;
-    }
-    a.btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 26px rgba(15,23,42,0.6);
-      border-color: rgba(248,250,252,0.4);
-    }
-    a.btn.primary:hover {
-      box-shadow: 0 14px 34px rgba(56,189,248,0.55);
-    }
-    .pill {
-      display: inline-flex;
-      padding: 0.15rem 0.6rem;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.8);
-      border: 1px solid rgba(148,163,184,0.35);
-      font-size: 0.75rem;
-      color: var(--muted);
-      gap: 0.4rem;
-      align-items: center;
-      margin-top: 0.8rem;
-    }
-    .pill span.key {
-      padding: 0.12rem 0.4rem;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.95);
-      border: 1px solid rgba(148,163,184,0.35);
-      font-size: 0.7rem;
-    }
-    ul {
-      margin: 0.3rem 0 0;
-      padding-left: 1.1rem;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Train Your Perceptron</title>
+<meta name="description" content="An interactive explainer: train a single neuron on AND and OR, watch it fail on XOR, then bend the plane with a hidden layer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/style.css">
 </head>
 <body>
-  <main class="shell">
-    <div class="badge">
-      <span class="badge-dot"></span>
-      Proyecto – Métodos Numéricos / Perceptrón
+
+<header class="hero">
+  <div class="hero-text">
+    <h1>How to train your perceptron</h1>
+    <p class="lede">In 1958 Frank Rosenblatt wired 400 photocells to a bank of motor-driven knobs and called it the Mark&nbsp;I Perceptron. It learned by turning those knobs. This page lets you turn them yourself, then shows the one problem a single neuron can never solve, and the fix.</p>
+    <a class="start" href="#neuron">Start with one neuron</a>
+  </div>
+
+  <figure class="plate hero-plate" aria-label="A perceptron learning the AND gate in real time">
+    <div class="plate-head"><span>Learning AND, live</span><span class="readout" id="heroStep">step 0</span></div>
+    <div class="hero-grid">
+      <canvas id="heroPlane" class="plane" width="400" height="400"></canvas>
+      <svg id="heroWires" class="wires" viewBox="0 0 260 200" aria-hidden="true"></svg>
     </div>
-    <h1>Cómo entrenar a tu perceptrón</h1>
-    <p class="subtitle">
-      Desarrollo teórico completo de perceptrones (una y dos capas), entrenamiento por descenso de gradiente
-      y aplicación a puertas lógicas AND, OR y XOR, junto con una demo interactiva en el navegador.
+    <figcaption>The dark line is where the neuron changes its mind. Cable thickness is the size of each weight; red cables are negative.</figcaption>
+  </figure>
+</header>
+
+<main>
+
+<section id="neuron" class="chapter">
+  <div class="prose">
+    <h2>One neuron, two inputs</h2>
+    <p>A perceptron adds up its inputs, each multiplied by a weight, plus a bias:</p>
+    <div class="math">\[ u = b + w_1 x_1 + w_2 x_2 \]</div>
+    <p>Then it squashes that number into the range 0 to 1 with a sigmoid, \( F = \sigma(u) = 1/(1+e^{-u}) \), and says “yes” when \(F\) passes a threshold \(\tau\). Every point where \(F = \tau\) lies on a straight line. That line is the whole decision.</p>
+    <p>Drag the two round handles to move the line, or use the faders. The background shows how confident the neuron is: deeper colour means further from the threshold.</p>
+  </div>
+
+  <div class="plate bench">
+    <div class="plate-head">
+      <div class="switch" role="radiogroup" aria-label="Logic gate">
+        <button role="radio" aria-checked="true" data-gate="AND">AND</button>
+        <button role="radio" aria-checked="false" data-gate="OR">OR</button>
+      </div>
+      <span class="readout" id="benchScore">4 of 4 correct</span>
+    </div>
+    <div class="bench-grid">
+      <canvas id="benchPlane" class="plane" width="480" height="480" aria-label="Input plane with the four points of the selected gate and a draggable decision line"></canvas>
+      <div class="controls">
+        <svg id="benchWires" class="wires" viewBox="0 0 260 200" aria-hidden="true"></svg>
+        <label class="fader"><span>bias <i>b</i></span><input type="range" id="fb" min="-25" max="25" step="0.1"><output id="ob"></output></label>
+        <label class="fader"><span>weight <i>w</i><sub>1</sub></span><input type="range" id="fw1" min="-25" max="25" step="0.1"><output id="ow1"></output></label>
+        <label class="fader"><span>weight <i>w</i><sub>2</sub></span><input type="range" id="fw2" min="-25" max="25" step="0.1"><output id="ow2"></output></label>
+        <label class="fader"><span>threshold <i>τ</i></span><input type="range" id="ftau" min="0.05" max="0.95" step="0.01" value="0.5"><output id="otau"></output></label>
+        <table class="truth">
+          <thead><tr><th><i>x</i><sub>1</sub></th><th><i>x</i><sub>2</sub></th><th>target</th><th><i>F</i>(<i>x</i>)</th><th>says</th></tr></thead>
+          <tbody id="benchTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="train" class="chapter">
+  <div class="prose">
+    <h2>Learning is walking downhill</h2>
+    <p>Nobody sets the knobs by hand. We measure how wrong the neuron is with the squared error over the four examples,</p>
+    <div class="math">\[ L(b, w_1, w_2) = \sum_{k=1}^{4} \bigl(y_k - F(x^{(k)})\bigr)^2 , \]</div>
+    <p>and nudge every weight a little in the direction that lowers \(L\). Because \(\sigma'(u) = \sigma(u)(1-\sigma(u))\), each nudge is cheap to compute. Press train and watch the line find its place from a random start.</p>
+  </div>
+
+  <div class="plate trainer">
+    <div class="plate-head">
+      <div class="switch" role="radiogroup" aria-label="Logic gate to train">
+        <button role="radio" aria-checked="true" data-gate="AND">AND</button>
+        <button role="radio" aria-checked="false" data-gate="OR">OR</button>
+      </div>
+      <div class="buttons">
+        <button class="key" id="trainGo">Train from random weights</button>
+        <button class="key ghost" id="trainStep">One step</button>
+      </div>
+    </div>
+    <div class="trainer-grid">
+      <canvas id="trainPlane" class="plane" width="420" height="420" aria-label="Decision line moving during training"></canvas>
+      <div class="loss-box">
+        <div class="loss-label"><span>loss <i>L</i></span><span class="readout" id="lossValue">–</span></div>
+        <canvas id="lossCurve" width="420" height="220" aria-label="Loss over training steps"></canvas>
+        <div class="loss-label"><span>learning rate <i>α</i></span>
+          <label class="fader compact"><input type="range" id="alpha" min="0.1" max="5" step="0.1" value="2"><output id="oalpha"></output></label>
+        </div>
+        <p class="note" id="trainNote">The line starts somewhere random. Each step moves it a little.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="xor" class="chapter">
+  <div class="prose">
+    <h2>The XOR wall</h2>
+    <p>Exclusive-or says yes when exactly one input is on. Put the four answers on the plane and the two blue points sit on opposite corners. Try to separate them with one line.</p>
+  </div>
+
+  <div class="plate wall">
+    <div class="plate-head">
+      <span>XOR, one neuron</span>
+      <span class="readout" id="xorScore">2 of 4 correct</span>
+    </div>
+    <div class="wall-grid">
+      <canvas id="xorPlane" class="plane" width="420" height="420" aria-label="XOR points with a draggable line"></canvas>
+      <div class="wall-side">
+        <p class="big-count"><span id="xorBest">2</span><small>best you’ve managed, out of 4</small></p>
+        <p class="note">Three is the ceiling. No straight line puts both blue corners on one side and both yellow corners on the other, so no amount of training can get a single neuron to four. Gradient descent gives up in the middle, with <i>F</i> close to 0.5 everywhere.</p>
+        <button class="key" id="xorTrain">Let gradient descent try</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="bend" class="chapter">
+  <div class="prose">
+    <h2>Bend the plane</h2>
+    <p>The fix is to stop looking at the original plane. Add a hidden layer of two neurons. Each one draws its own line, and together they map every point \(x\) to a new point</p>
+    <div class="math">\[ z = \bigl(\sigma(W^{[1]}x + b^{[1]})_1,\; \sigma(W^{[1]}x + b^{[1]})_2\bigr) \]</div>
+    <p>An output neuron then draws one straight line in \(z\)-space. Train the network, then drag the slider to watch the plane bend. Where the grid ends up, the two blue points have been pulled to the same side.</p>
+  </div>
+
+  <div class="plate warp">
+    <div class="plate-head">
+      <span>Two inputs, two hidden neurons, one output</span>
+      <div class="buttons">
+        <button class="key" id="mlpTrain">Train the network</button>
+      </div>
+    </div>
+    <div class="warp-grid">
+      <canvas id="warpPlane" class="plane" width="520" height="520" aria-label="The input grid morphing into hidden space"></canvas>
+      <div class="warp-side">
+        <label class="fader wide"><span>input space</span><input type="range" id="morph" min="0" max="1" step="0.001" value="0" disabled aria-label="Morph from input space to hidden space"><span>hidden space</span></label>
+        <canvas id="mlpField" class="plane small" width="260" height="260" aria-label="Curved decision region of the trained network in input space"></canvas>
+        <p class="note" id="mlpNote">Press train. About two seconds of gradient descent, nine weights.</p>
+        <table class="truth">
+          <thead><tr><th><i>x</i><sub>1</sub></th><th><i>x</i><sub>2</sub></th><th>target</th><th><i>F</i>(<i>x</i>)</th></tr></thead>
+          <tbody id="mlpTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter coda">
+  <div class="prose">
+    <h2>The rest of the maths</h2>
+    <p>Every derivative used on this page, including the backpropagation through the hidden layer, is worked out step by step in the derivation. The original report is there too.</p>
+    <p class="links">
+      <a class="key" href="theory.html">Read the full derivation</a>
+      <a class="key ghost" href="Paper.pdf">Original report (PDF, Spanish)</a>
+      <a class="key ghost" href="https://github.com/liiiaamm/how-to-train-your-perceptron">Source on GitHub</a>
     </p>
+  </div>
+</section>
 
-    <section>
-      <p style="font-size:0.95rem;">
-        Usa los siguientes enlaces para navegar entre las partes del proyecto:
-      </p>
-      <div class="links">
-        <a class="btn primary" href="teoria.html">
-          📖 Desarrollo teórico
-        </a>
-        <a class="btn" href="interactivo.html">
-          ⚙️ Demo interactiva
-        </a>
-        <a class="btn" href="pdf.html">
-          ✒️ Paper original
-        </a>
-      </div>
+</main>
 
-      <div class="pill">
-        <span>Contenido</span>
-        <span class="key">Teoría</span>
-        <span class="key">Puertas lógicas</span>
-        <span class="key">MLP XOR</span>
-        <span class="key">Demo JS</span>
-      </div>
-    </section>
-  </main>
+<footer>
+  <p>A team project for Numerical Methods, BSc in Mathematical Engineering and AI, Comillas ICAI. Rebuilt as an interactive page by <a href="https://github.com/liiiaamm">Liam Esgueva</a>. Everything runs in your browser.</p>
+</footer>
+
+<script>
+window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global', displayAlign: 'left' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+<script src="static/perceptron.js"></script>
 </body>
 </html>
