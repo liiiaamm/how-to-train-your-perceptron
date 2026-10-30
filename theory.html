@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The derivation – How to Train Your Perceptron</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/style.css">
+<style>
+  .doc { max-width: 46rem; margin: 0 auto; padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 2rem) 5rem; }
+  .doc h1 { font-size: clamp(2.6rem, 6vw, 4.4rem); margin: 1.5rem 0 1rem; }
+  .doc h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 3.5rem 0 1rem; scroll-margin-top: 1.5rem; }
+  .doc h3 { font-family: var(--display); font-weight: 700; font-size: 1.15rem; margin: 2rem 0 0.5rem; }
+  .doc p, .doc li { max-width: 40rem; }
+  .doc .math { background: var(--enamel); border: 2px solid var(--ink); border-radius: 6px; padding: 0.6rem 1rem; }
+  .back { font-family: var(--display); font-weight: 700; color: var(--ink); text-decoration: none; border-bottom: 3px solid var(--red); }
+  .toc { columns: 2; column-gap: 2rem; padding-left: 1.2rem; font-size: 1rem; }
+  .toc a { color: var(--ink); }
+  .fix { border-left: 4px solid var(--red); padding: 0.4rem 0 0.4rem 1rem; font-size: 1rem; color: var(--ink-soft); }
+  @media (max-width: 600px) { .toc { columns: 1; } }
+</style>
+</head>
+<body>
+<article class="doc">
+  <a class="back" href="index.html">Back to the interactive page</a>
+  <h1>The derivation</h1>
+  <p class="lede">Every formula behind the interactive page, from the single neuron to backpropagation through a hidden layer. Translated from the original report; the MATLAB code has been left out.</p>
+
+  <ol class="toc">
+    <li><a href="#intro">Classification as a smooth function</a></li>
+    <li><a href="#perceptron">The perceptron</a></li>
+    <li><a href="#gradient">Derivatives and the gradient</a></li>
+    <li><a href="#gates">AND and OR</a></li>
+    <li><a href="#xor">Why XOR fails</a></li>
+    <li><a href="#mlp">The two-layer perceptron</a></li>
+    <li><a href="#backprop">Derivatives with a hidden layer</a></li>
+    <li><a href="#count">Counting parameters</a></li>
+    <li><a href="#xor-solved">XOR with two layers</a></li>
+  </ol>
+
+  <h2 id="intro">1. Classification as a smooth function</h2>
+  <p>Binary classification assigns each object a label, 0 or 1, from its features. Written as a function,</p>
+  <div class="math">\[ C : \mathbb{R}^n \rightarrow \{0,1\}. \]</div>
+  <p>Because \(C\) jumps from 0 to 1, it has no useful derivative and calculus cannot tell us how each feature influences the decision. So we replace it with a smooth approximation made of two parts:</p>
+  <ul>
+    <li>a <strong>level function</strong> \(u : \mathbb{R}^n \to \mathbb{R}\), a linear combination of the features;</li>
+    <li>an <strong>activation function</strong> \(\phi : \mathbb{R} \to \mathbb{R}\), which turns that number into something between 0 and 1.</li>
+  </ul>
+  <div class="math">\[ C(x) \approx (\phi \circ u)(x), \]</div>
+  <p>and the object is assigned to the class of interest when \((\phi \circ u)(x) > \tau_0\) for a chosen threshold \(\tau_0\).</p>
+
+  <h2 id="perceptron">2. The perceptron</h2>
+  <p>The perceptron uses the level function</p>
+  <div class="math">\[ u(x_1,\ldots,x_n) = b + w_1 x_1 + \cdots + w_n x_n \equiv b + w^{\mathsf T} x, \tag{1} \]</div>
+  <p>with weight vector \(w = (w_1,\ldots,w_n)^{\mathsf T}\), input \(x = (x_1,\ldots,x_n)^{\mathsf T}\) and bias \(b \in \mathbb{R}\). The classic activation is the sigmoid,</p>
+  <div class="math">\[ \phi(z) = \frac{1}{1 + e^{-z}}, \tag{2} \]</div>
+  <p>which is differentiable and moves smoothly from 0 to 1, passing through \(1/2\) at \(z = 0\). The model is</p>
+  <div class="math">\[ F(x;\theta) = \phi\bigl(u(x;\theta)\bigr), \qquad \theta = (b, w_1, \ldots, w_n), \]</div>
+  <p>and training means choosing \(\theta\) to minimise the squared error over the \(N\) labelled examples:</p>
+  <div class="math">\[ L(b, w_1, \ldots, w_n) = \sum_{k=1}^{N} \bigl(y_k - F(x^{(k)})\bigr)^2. \tag{3} \]</div>
+
+  <h2 id="gradient">3. Derivatives and the gradient</h2>
+  <h3>Partial derivatives of \(u\)</h3>
+  <div class="math">\[ \frac{\partial u}{\partial b} = 1, \qquad \frac{\partial u}{\partial w_i} = x_i, \quad i = 1,\ldots,n. \]</div>
+  <h3>Partial derivatives of \(F = \phi \circ u\)</h3>
+  <p>By the chain rule,</p>
+  <div class="math">\[ \frac{\partial F}{\partial b} = \phi'\bigl(u(x;\theta)\bigr), \qquad \frac{\partial F}{\partial w_j} = \phi'\bigl(u(x;\theta)\bigr)\, x_j. \]</div>
+  <h3>Derivative of the sigmoid</h3>
+  <div class="math">\[ \phi'(z) = \frac{e^{-z}}{(1+e^{-z})^2} = \frac{1}{1+e^{-z}} \cdot \frac{e^{-z}}{1+e^{-z}} = \phi(z)\bigl(1-\phi(z)\bigr). \tag{4} \]</div>
+  <p>This is what makes the sigmoid cheap to train: its derivative is expressed through the value we have already computed.</p>
+  <h3>Gradient of the loss</h3>
+  <div class="math">\[ \frac{\partial L}{\partial b} = -2 \sum_{k=1}^{N} \bigl(y_k - \phi(u(x^{(k)}))\bigr)\, \phi'\bigl(u(x^{(k)})\bigr), \]
+  \[ \frac{\partial L}{\partial w_i} = -2 \sum_{k=1}^{N} x_i^{(k)} \bigl(y_k - \phi(u(x^{(k)}))\bigr)\, \phi'\bigl(u(x^{(k)})\bigr), \quad i = 1,\ldots,n. \]</div>
+  <p>Gradient descent repeats \(\theta \leftarrow \theta - \alpha \nabla L(\theta)\) with learning rate \(\alpha\).</p>
+
+  <h2 id="gates">4. AND and OR</h2>
+  <p>Two-input logic gates are the smallest interesting case: four points in \(\mathbb{R}^2\).</p>
+  <div class="math">\[ \text{AND: } (0,0)\mapsto 0,\; (0,1)\mapsto 0,\; (1,0)\mapsto 0,\; (1,1)\mapsto 1 \]
+  \[ \text{OR: } (0,0)\mapsto 0,\; (0,1)\mapsto 1,\; (1,0)\mapsto 1,\; (1,1)\mapsto 1 \]</div>
+  <p>At the four inputs the model takes the values</p>
+  <div class="math">\[ \begin{aligned} F(0,0) &= \phi(b), & F(0,1) &= \phi(w_2 + b), \\ F(1,0) &= \phi(w_1 + b), & F(1,1) &= \phi(w_1 + w_2 + b), \end{aligned} \]</div>
+  <p>so the two losses are</p>
+  <div class="math">\[ L_{\text{AND}} = \phi(b)^2 + \phi(w_2+b)^2 + \phi(w_1+b)^2 + \bigl(1-\phi(w_1+w_2+b)\bigr)^2, \]
+  \[ L_{\text{OR}} = \phi(b)^2 + \bigl(1-\phi(w_2+b)\bigr)^2 + \bigl(1-\phi(w_1+b)\bigr)^2 + \bigl(1-\phi(w_1+w_2+b)\bigr)^2. \]</div>
+  <h3>The gradient written out for AND</h3>
+  <div class="math">\[ L_b = -2\Bigl( -\phi(b)\phi'(b) - \phi(w_2+b)\phi'(w_2+b) - \phi(w_1+b)\phi'(w_1+b) + \bigl(1-\phi(w_1+w_2+b)\bigr)\phi'(w_1+w_2+b) \Bigr) \]
+  \[ L_{w_1} = -2\Bigl( -\phi(w_1+b)\phi'(w_1+b) + \bigl(1-\phi(w_1+w_2+b)\bigr)\phi'(w_1+w_2+b) \Bigr) \]
+  \[ L_{w_2} = -2\Bigl( -\phi(w_2+b)\phi'(w_2+b) + \bigl(1-\phi(w_1+w_2+b)\bigr)\phi'(w_1+w_2+b) \Bigr) \]</div>
+  <p>Terms disappear from \(L_{w_1}\) and \(L_{w_2}\) because \(x_1^{(k)}\) or \(x_2^{(k)}\) is zero for those examples.</p>
+  <h3>The gradient written out for OR</h3>
+  <div class="math">\[ L_b = -2\Bigl( -\phi(b)\phi'(b) + \bigl(1-\phi(w_2+b)\bigr)\phi'(w_2+b) + \bigl(1-\phi(w_1+b)\bigr)\phi'(w_1+b) + \bigl(1-\phi(w_1+w_2+b)\bigr)\phi'(w_1+w_2+b) \Bigr) \]
+  \[ L_{w_1} = -2\Bigl( \bigl(1-\phi(w_1+b)\bigr)\phi'(w_1+b) + \bigl(1-\phi(w_1+w_2+b)\bigr)\phi'(w_1+w_2+b) \Bigr) \]
+  \[ L_{w_2} = -2\Bigl( \bigl(1-\phi(w_2+b)\bigr)\phi'(w_2+b) + \bigl(1-\phi(w_1+w_2+b)\bigr)\phi'(w_1+w_2+b) \Bigr) \]</div>
+  <h3>The decision line</h3>
+  <p>With threshold \(\tau_0 = 1/2\), the boundary is where \(F = 1/2\), which happens exactly when \(u = 0\):</p>
+  <div class="math">\[ b + w_1 x_1 + w_2 x_2 = 0 \quad\Longleftrightarrow\quad x_2 = -\frac{b + w_1 x_1}{w_2}. \]</div>
+  <p>For a general threshold \(\tau\) the line shifts to \(u = \log\frac{\tau}{1-\tau}\). With the trained parameters, this line separates the four points correctly for both gates.</p>
+  <p class="fix">Correction to the original report, which used the level curve \(u = 1/2\). The boundary of the classifier \(F > 1/2\) is \(u = 0\).</p>
+
+  <h2 id="xor">5. Why XOR fails</h2>
+  <div class="math">\[ \text{XOR: } (0,0)\mapsto 0,\; (0,1)\mapsto 1,\; (1,0)\mapsto 1,\; (1,1)\mapsto 0 \]</div>
+  <p>A single perceptron can only draw straight boundaries. The two positive points sit on opposite corners of the square, so any line that puts both on one side also takes at least one negative point with it. No choice of \((b, w_1, w_2)\) drives the error to zero. In practice, gradient descent settles near \(F \approx 1/2\) everywhere, with loss close to 1. The problem is the architecture, not the training.</p>
+
+  <h2 id="mlp">6. The two-layer perceptron</h2>
+  <p>Adding a layer removes that limit. With enough hidden units and a sigmoid activation, a multilayer perceptron can approximate any continuous function on a compact set (the universal approximation theorem). One extra layer is enough for XOR.</p>
+  <p>The idea is to run several perceptrons in parallel, turning the original features \(x\) into new ones, and then apply one more perceptron to those. The first block is affine,</p>
+  <div class="math">\[ s = W^{[1]} x + b^{[1]}, \qquad s_i = \sum_{j=1}^{n} w^{[1]}_{ij} x_j + b^{[1]}_i, \]</div>
+  <p>followed by the sigmoid applied to each component,</p>
+  <div class="math">\[ z = \Phi(s) = \bigl(\phi(s_1), \ldots, \phi(s_n)\bigr), \]</div>
+  <p>and an output perceptron on top:</p>
+  <div class="math">\[ t = \sum_{i=1}^{n} w^{[2]}_i z_i + b^{[2]}, \qquad F(x) = \phi(t). \tag{5} \]</div>
+  <p>Since \(\Phi\) acts on each coordinate separately, its Jacobian is diagonal:</p>
+  <div class="math">\[ D\Phi(s) = \operatorname{diag}\bigl(\phi'(s_1), \ldots, \phi'(s_n)\bigr). \]</div>
+
+  <h2 id="backprop">7. Derivatives with a hidden layer</h2>
+  <h3>Output layer</h3>
+  <div class="math">\[ \frac{\partial F}{\partial b^{[2]}} = \phi'(t), \qquad \frac{\partial F}{\partial w^{[2]}_i} = \phi'(t)\, z_i. \]</div>
+  <h3>Hidden layer</h3>
+  <p>The chain rule passes through \(t\), then \(z_i\), then \(s_i\):</p>
+  <div class="math">\[ \frac{\partial F}{\partial b^{[1]}_i} = \underbrace{\phi'(t)}_{\partial F/\partial t}\, \underbrace{w^{[2]}_i}_{\partial t/\partial z_i}\, \underbrace{\phi'(s_i)}_{\partial z_i/\partial s_i}, \qquad \frac{\partial F}{\partial w^{[1]}_{ij}} = \phi'(t)\, w^{[2]}_i\, \phi'(s_i)\, x_j. \]</div>
+  <p>Written fully in terms of the inputs and parameters:</p>
+  <div class="math">\[ \frac{\partial F}{\partial w^{[1]}_{ij}} = \phi'\!\Bigl( \sum_{k} w^{[2]}_k\, \phi\bigl(\textstyle\sum_r w^{[1]}_{kr} x_r + b^{[1]}_k\bigr) + b^{[2]} \Bigr)\, w^{[2]}_i\, \phi'\!\Bigl(\textstyle\sum_r w^{[1]}_{ir} x_r + b^{[1]}_i\Bigr)\, x_j. \]</div>
+  <p>The gradient of the loss follows exactly as in section 3: multiply by \(-2\bigl(y_k - F(x^{(k)})\bigr)\) and sum over the examples. This is backpropagation, and it is what the interactive page runs to bend the plane.</p>
+
+  <h2 id="count">8. Counting parameters</h2>
+  <p>For two inputs, two hidden neurons and one output,</p>
+  <div class="math">\[ \underbrace{W^{[1]}}_{2\times 2 \,=\, 4} + \underbrace{b^{[1]}}_{2} + \underbrace{w^{[2]}}_{2} + \underbrace{b^{[2]}}_{1} = 9 \text{ parameters.} \]</div>
+
+  <h2 id="xor-solved">9. XOR with two layers</h2>
+  <p>Trained by gradient descent, the 2-2-1 network from the report reaches</p>
+  <div class="math">\[ \begin{array}{cc|c|c} x_1 & x_2 & F(x_1,x_2) & \text{class} \\ \hline 0 & 0 & 0.0065 & 0 \\ 0 & 1 & 0.9926 & 1 \\ 1 & 0 & 0.9926 & 1 \\ 1 & 1 & 0.0069 & 0 \end{array} \]</div>
+  <p>Over the unit square, \(F\) has two ridges, at \((0,1)\) and \((1,0)\), and two valleys, at \((0,0)\) and \((1,1)\). That is XOR. Seen from the hidden layer, the four points have been moved so that a single straight line separates them, which is what the last panel of the interactive page animates.</p>
+
+  <p style="margin-top: 4rem"><a class="key" href="index.html">Back to the interactive page</a> <a class="key ghost" href="Paper.pdf">Original report (PDF, Spanish)</a></p>
+</article>
+
+<script>
+window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'none' }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+</body>
+</html>
