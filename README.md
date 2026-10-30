@@ -4,7 +4,7 @@ An interactive explainer for the simplest neural network there is. Move the bias
 
 **[Open the live site →](https://liiiaamm.github.io/how-to-train-your-perceptron/)**
 
-Made for the Numerical Methods course at Comillas ICAI (BSc in Mathematical Engineering and AI). Plain HTML, CSS and JavaScript, no build step.
+Built as a team project for the Numerical Methods course at Comillas ICAI (BSc in Mathematical Engineering and AI). Plain HTML, CSS and JavaScript, no build step.
 
 ## What's inside
 
@@ -22,11 +22,6 @@ Open `index.html` in a browser, or serve the folder:
 ```bash
 python -m http.server 8000
 ```
-
-## Authors
-
-- Alejandro Alcázar
-- Liam Esgueva González
 
 ## License
 
